@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { ArrowDown, ArrowRight, Camera, Check, Menu, MessageCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { slugByCourse } from "@/lib/course-content";
 import heroAsset from "@/assets/hero-students.webp.asset.json";
 import practiceAsset from "@/assets/practice-collage.webp.asset.json";
 import workAsset from "@/assets/student-work.webp.asset.json";
@@ -89,9 +90,9 @@ function HomePage() {
     event.currentTarget.reset();
   }
 
-  async function finishQuiz() {
-    track("QuizComplete", quiz);
-    window.open(wa(`Olá! Fiz o quiz do site. Já fotografo: ${quiz.experience}. Equipamento: ${quiz.equipment}. Objetivo: ${quiz.objective}. Gostaria de ajuda para escolher um curso.`), "_blank", "noopener,noreferrer");
+  async function finishQuiz(result: typeof quiz) {
+    track("QuizComplete", result);
+    window.open(wa(`Olá! Fiz o quiz do site. Já fotografo: ${result.experience}. Equipamento: ${result.equipment}. Objetivo: ${result.objective}. Gostaria de ajuda para escolher um curso.`), "_blank", "noopener,noreferrer");
   }
 
   const quizQuestions = [
@@ -99,6 +100,7 @@ function HomePage() {
     { key: "equipment", title: "Qual equipamento utiliza?", options: ["Celular", "Câmera", "Ainda não tenho"] },
     { key: "objective", title: "Qual é o seu objetivo?", options: ["Hobby", "Aprender fotografia", "Aperfeiçoar técnica", "Fotografia profissional", "Uma especialidade específica", "Ainda não sei"] },
   ] as const;
+  const currentQuestion = quizQuestions[quizStep] ?? quizQuestions[0];
 
   return (
     <main id="inicio" className="bg-background text-foreground">
@@ -111,7 +113,7 @@ function HomePage() {
           </nav>
           <Button variant="outline" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}>{menuOpen ? <X /> : <Menu />}</Button>
         </div>
-        {menuOpen && <nav className="border-t border-border bg-background px-5 py-6 md:hidden">{[['Cursos','cursos'],['A Escola','escola'],['Professores','professores'],['Dúvidas','duvidas']].map(([label,id]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)} className="block border-b border-border py-4 font-display text-xl">{label}</a>)}</nav>}
+        {menuOpen && <nav className="absolute inset-x-0 top-16 border-t border-border bg-background px-5 py-6 md:hidden">{[['Cursos','cursos'],['A Escola','escola'],['Professores','professores'],['Dúvidas','duvidas']].map(([label,id]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)} className="block border-b border-border py-4 font-display text-xl">{label}</a>)}</nav>}
       </header>
 
       <section className="relative min-h-[92svh] overflow-hidden pt-16">
@@ -165,14 +167,14 @@ function HomePage() {
       <section id="cursos" className="py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-5 lg:px-10">
           <div className="flex flex-col gap-5 border-b border-border pb-10 md:flex-row md:items-end md:justify-between"><div><p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-primary">Formações e cursos</p><h2 className="max-w-3xl text-4xl font-semibold sm:text-6xl">Encontre o curso que combina com você.</h2></div><p className="max-w-sm text-sm text-muted-foreground">Consulte disponibilidade, valores e próximas turmas diretamente com a equipe.</p></div>
-          <div className="divide-y divide-border">{courseGroups.map((group, i) => <div key={group.label} className="grid gap-7 py-10 md:grid-cols-[0.7fr_1.3fr]"><div><span className="text-xs text-primary">0{i+1}</span><h3 className="mt-3 text-xl font-semibold uppercase">{group.label}</h3></div><div className="grid gap-x-8 sm:grid-cols-2">{group.courses.map(course => <a key={course} href={wa(`Olá! Vim pelo site e gostaria de saber mais sobre o curso de ${course}.`)} onClick={() => track("CourseInterest", { course })} target="_blank" rel="noreferrer" className="group flex min-h-14 items-center justify-between border-b border-border py-3 text-sm"><span>{course}</span><ArrowRight size={16} className="text-primary transition-transform group-hover:translate-x-1" /></a>)}</div></div>)}</div>
+          <div className="divide-y divide-border">{courseGroups.map((group, i) => <div key={group.label} className="grid gap-7 py-10 md:grid-cols-[0.7fr_1.3fr]"><div><span className="text-xs text-primary">0{i+1}</span><h3 className="mt-3 text-xl font-semibold uppercase">{group.label}</h3></div><div className="grid gap-x-8 sm:grid-cols-2">{group.courses.map(course => <a key={course} href={`/cursos/${slugByCourse[course]}`} onClick={() => track("CourseInterest", { course })} className="group flex min-h-14 items-center justify-between border-b border-border py-3 text-sm"><span>{course}</span><ArrowRight size={16} className="text-primary transition-transform group-hover:translate-x-1" /></a>)}</div></div>)}</div>
           <p className="mt-8 text-xs text-muted-foreground">Os nomes e a disponibilidade atual dos cursos devem ser confirmados com a equipe antes da publicação final.</p>
         </div>
       </section>
 
       <section id="quiz" className="bg-primary py-20 text-primary-foreground lg:py-28">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-2 lg:px-10"><div><p className="mb-5 text-xs font-bold uppercase tracking-[0.2em]">Orientação personalizada</p><h2 className="text-5xl font-semibold leading-tight">Ainda não sabe qual curso escolher?</h2><p className="mt-5 max-w-lg text-lg">Conte um pouco sobre você e nossa equipe ajuda a encontrar o caminho mais adequado.</p></div>
-          <div className="border border-primary-foreground/30 bg-background p-6 text-foreground sm:p-8"><div className="mb-8 flex gap-2">{quizQuestions.map((_, i) => <span key={i} className={`h-1 flex-1 ${i <= quizStep ? "bg-primary" : "bg-muted"}`} />)}</div><p className="text-xs uppercase tracking-widest text-muted-foreground">Pergunta {quizStep + 1} de 3</p><h3 className="mt-3 text-2xl">{quizQuestions[quizStep].title}</h3><div className="mt-7 grid gap-2">{quizQuestions[quizStep].options.map(option => <Button key={option} variant="outline" className="justify-between normal-case tracking-normal" onClick={() => { const key = quizQuestions[quizStep].key; setQuiz(q => ({...q, [key]: option})); if (quizStep === 0) track("QuizStart"); if (quizStep < 2) setQuizStep(quizStep + 1); else void finishQuiz(); }}>{option}<ArrowRight size={16} /></Button>)}</div>{quizStep > 0 && <button className="mt-5 text-xs underline" onClick={() => setQuizStep(quizStep - 1)}>Voltar</button>}</div>
+          <div className="border border-primary-foreground/30 bg-background p-6 text-foreground sm:p-8"><div className="mb-8 flex gap-2">{quizQuestions.map((_, i) => <span key={i} className={`h-1 flex-1 ${i <= quizStep ? "bg-primary" : "bg-muted"}`} />)}</div><p className="text-xs uppercase tracking-widest text-muted-foreground">Pergunta {quizStep + 1} de 3</p><h3 className="mt-3 text-2xl">{currentQuestion.title}</h3><div className="mt-7 grid gap-2">{currentQuestion.options.map(option => <Button key={option} variant="outline" className="justify-between normal-case tracking-normal" onClick={() => { const key = currentQuestion.key; const result = {...quiz, [key]: option}; setQuiz(result); if (quizStep === 0) track("QuizStart"); if (quizStep < 2) setQuizStep(quizStep + 1); else void finishQuiz(result); }}>{option}<ArrowRight size={16} /></Button>)}</div>{quizStep > 0 && <button className="mt-5 text-xs underline" onClick={() => setQuizStep(quizStep - 1)}>Voltar</button>}</div>
         </div>
       </section>
 
