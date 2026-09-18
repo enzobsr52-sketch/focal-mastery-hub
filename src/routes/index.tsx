@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { ArrowDown, ArrowRight, Camera, Check, Menu, MessageCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { slugByCourse } from "@/lib/course-content";
 import heroAsset from "@/assets/hero-students.webp.asset.json";
 import practiceAsset from "@/assets/practice-collage.webp.asset.json";
 import workAsset from "@/assets/student-work.webp.asset.json";
@@ -112,7 +113,7 @@ function HomePage() {
           </nav>
           <Button variant="outline" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}>{menuOpen ? <X /> : <Menu />}</Button>
         </div>
-        {menuOpen && <nav className="border-t border-border bg-background px-5 py-6 md:hidden">{[['Cursos','cursos'],['A Escola','escola'],['Professores','professores'],['Dúvidas','duvidas']].map(([label,id]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)} className="block border-b border-border py-4 font-display text-xl">{label}</a>)}</nav>}
+        {menuOpen && <nav className="absolute inset-x-0 top-16 border-t border-border bg-background px-5 py-6 md:hidden">{[['Cursos','cursos'],['A Escola','escola'],['Professores','professores'],['Dúvidas','duvidas']].map(([label,id]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)} className="block border-b border-border py-4 font-display text-xl">{label}</a>)}</nav>}
       </header>
 
       <section className="relative min-h-[92svh] overflow-hidden pt-16">
@@ -166,7 +167,7 @@ function HomePage() {
       <section id="cursos" className="py-20 lg:py-28">
         <div className="mx-auto max-w-7xl px-5 lg:px-10">
           <div className="flex flex-col gap-5 border-b border-border pb-10 md:flex-row md:items-end md:justify-between"><div><p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-primary">Formações e cursos</p><h2 className="max-w-3xl text-4xl font-semibold sm:text-6xl">Encontre o curso que combina com você.</h2></div><p className="max-w-sm text-sm text-muted-foreground">Consulte disponibilidade, valores e próximas turmas diretamente com a equipe.</p></div>
-          <div className="divide-y divide-border">{courseGroups.map((group, i) => <div key={group.label} className="grid gap-7 py-10 md:grid-cols-[0.7fr_1.3fr]"><div><span className="text-xs text-primary">0{i+1}</span><h3 className="mt-3 text-xl font-semibold uppercase">{group.label}</h3></div><div className="grid gap-x-8 sm:grid-cols-2">{group.courses.map(course => <a key={course} href={wa(`Olá! Vim pelo site e gostaria de saber mais sobre o curso de ${course}.`)} onClick={() => track("CourseInterest", { course })} target="_blank" rel="noreferrer" className="group flex min-h-14 items-center justify-between border-b border-border py-3 text-sm"><span>{course}</span><ArrowRight size={16} className="text-primary transition-transform group-hover:translate-x-1" /></a>)}</div></div>)}</div>
+          <div className="divide-y divide-border">{courseGroups.map((group, i) => <div key={group.label} className="grid gap-7 py-10 md:grid-cols-[0.7fr_1.3fr]"><div><span className="text-xs text-primary">0{i+1}</span><h3 className="mt-3 text-xl font-semibold uppercase">{group.label}</h3></div><div className="grid gap-x-8 sm:grid-cols-2">{group.courses.map(course => <a key={course} href={`/cursos/${slugByCourse[course]}`} onClick={() => track("CourseInterest", { course })} className="group flex min-h-14 items-center justify-between border-b border-border py-3 text-sm"><span>{course}</span><ArrowRight size={16} className="text-primary transition-transform group-hover:translate-x-1" /></a>)}</div></div>)}</div>
           <p className="mt-8 text-xs text-muted-foreground">Os nomes e a disponibilidade atual dos cursos devem ser confirmados com a equipe antes da publicação final.</p>
         </div>
       </section>
