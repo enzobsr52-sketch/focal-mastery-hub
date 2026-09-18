@@ -89,9 +89,9 @@ function HomePage() {
     event.currentTarget.reset();
   }
 
-  async function finishQuiz() {
-    track("QuizComplete", quiz);
-    window.open(wa(`Olá! Fiz o quiz do site. Já fotografo: ${quiz.experience}. Equipamento: ${quiz.equipment}. Objetivo: ${quiz.objective}. Gostaria de ajuda para escolher um curso.`), "_blank", "noopener,noreferrer");
+  async function finishQuiz(result: typeof quiz) {
+    track("QuizComplete", result);
+    window.open(wa(`Olá! Fiz o quiz do site. Já fotografo: ${result.experience}. Equipamento: ${result.equipment}. Objetivo: ${result.objective}. Gostaria de ajuda para escolher um curso.`), "_blank", "noopener,noreferrer");
   }
 
   const quizQuestions = [
@@ -99,6 +99,7 @@ function HomePage() {
     { key: "equipment", title: "Qual equipamento utiliza?", options: ["Celular", "Câmera", "Ainda não tenho"] },
     { key: "objective", title: "Qual é o seu objetivo?", options: ["Hobby", "Aprender fotografia", "Aperfeiçoar técnica", "Fotografia profissional", "Uma especialidade específica", "Ainda não sei"] },
   ] as const;
+  const currentQuestion = quizQuestions[quizStep] ?? quizQuestions[0];
 
   return (
     <main id="inicio" className="bg-background text-foreground">
@@ -172,7 +173,7 @@ function HomePage() {
 
       <section id="quiz" className="bg-primary py-20 text-primary-foreground lg:py-28">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-2 lg:px-10"><div><p className="mb-5 text-xs font-bold uppercase tracking-[0.2em]">Orientação personalizada</p><h2 className="text-5xl font-semibold leading-tight">Ainda não sabe qual curso escolher?</h2><p className="mt-5 max-w-lg text-lg">Conte um pouco sobre você e nossa equipe ajuda a encontrar o caminho mais adequado.</p></div>
-          <div className="border border-primary-foreground/30 bg-background p-6 text-foreground sm:p-8"><div className="mb-8 flex gap-2">{quizQuestions.map((_, i) => <span key={i} className={`h-1 flex-1 ${i <= quizStep ? "bg-primary" : "bg-muted"}`} />)}</div><p className="text-xs uppercase tracking-widest text-muted-foreground">Pergunta {quizStep + 1} de 3</p><h3 className="mt-3 text-2xl">{quizQuestions[quizStep].title}</h3><div className="mt-7 grid gap-2">{quizQuestions[quizStep].options.map(option => <Button key={option} variant="outline" className="justify-between normal-case tracking-normal" onClick={() => { const key = quizQuestions[quizStep].key; setQuiz(q => ({...q, [key]: option})); if (quizStep === 0) track("QuizStart"); if (quizStep < 2) setQuizStep(quizStep + 1); else void finishQuiz(); }}>{option}<ArrowRight size={16} /></Button>)}</div>{quizStep > 0 && <button className="mt-5 text-xs underline" onClick={() => setQuizStep(quizStep - 1)}>Voltar</button>}</div>
+          <div className="border border-primary-foreground/30 bg-background p-6 text-foreground sm:p-8"><div className="mb-8 flex gap-2">{quizQuestions.map((_, i) => <span key={i} className={`h-1 flex-1 ${i <= quizStep ? "bg-primary" : "bg-muted"}`} />)}</div><p className="text-xs uppercase tracking-widest text-muted-foreground">Pergunta {quizStep + 1} de 3</p><h3 className="mt-3 text-2xl">{currentQuestion.title}</h3><div className="mt-7 grid gap-2">{currentQuestion.options.map(option => <Button key={option} variant="outline" className="justify-between normal-case tracking-normal" onClick={() => { const key = currentQuestion.key; const result = {...quiz, [key]: option}; setQuiz(result); if (quizStep === 0) track("QuizStart"); if (quizStep < 2) setQuizStep(quizStep + 1); else void finishQuiz(result); }}>{option}<ArrowRight size={16} /></Button>)}</div>{quizStep > 0 && <button className="mt-5 text-xs underline" onClick={() => setQuizStep(quizStep - 1)}>Voltar</button>}</div>
         </div>
       </section>
 
