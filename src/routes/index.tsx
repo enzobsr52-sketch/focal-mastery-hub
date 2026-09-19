@@ -77,8 +77,9 @@ function HomePage() {
 
   async function submitLead(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setLeadState("sending");
-    const data = new FormData(event.currentTarget);
+    const data = new FormData(form);
     const params = new URLSearchParams(window.location.search);
     const { error } = await supabase.from("leads").insert({
       name: String(data.get("name") ?? ""), whatsapp: String(data.get("whatsapp") ?? ""), objective: String(data.get("objective") ?? ""),
@@ -87,7 +88,7 @@ function HomePage() {
     });
     if (error) { setLeadState("error"); return; }
     setLeadState("done"); track("FormSubmit", { source: "home" }); track("Lead", { source: "home_form" });
-    event.currentTarget.reset();
+    form.reset();
   }
 
   async function finishQuiz(result: typeof quiz) {
